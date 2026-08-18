@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1c1a17">
+<title>Checklist — Corolla XEi 2000</title>
+<style>
+  :root{
+    --ink:#1c1a17;--ink-soft:#5c564d;--ink-faint:#8b8578;
+    --paper:#f2efe9;--card:#ffffff;--line:#ddd8cc;
+    --terra:#7a3b2e;--sand:#8a7a5c;--grey:#6b6b6b;--done:#2f6b4f;--danger:#a13b2e;
+    --tap:48px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{background:var(--paper);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    font-size:15px;line-height:1.4;padding-bottom:96px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:640px;margin:0 auto;padding:0 14px}
+
+  /* topo */
+  .hero{background:var(--ink);color:#f6f3ec;padding:18px 0 14px}
+  .eyebrow{font-size:10.5px;letter-spacing:1.6px;text-transform:uppercase;color:#a9a294;margin:0 0 4px}
+  .hero h1{font-family:Georgia,serif;font-size:22px;margin:0 0 2px;font-weight:600}
+  .hero .car{font-size:12.5px;color:#c3bcac;margin:0}
+  .hero .meta{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:10px;font-size:11.5px;color:#a9a294}
+  .hero .meta b{color:#f6f3ec;font-weight:600}
+
+  /* barra fixa */
+  .bar{position:sticky;top:0;z-index:30;background:var(--paper);border-bottom:1px solid var(--line);
+       padding:9px 0 8px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+  .bar .row{display:flex;align-items:center;gap:10px}
+  .count{font-family:Georgia,serif;font-size:19px;font-weight:700;white-space:nowrap}
+  .count small{font-size:12px;color:var(--ink-faint);font-weight:400}
+  .track{flex:1;height:8px;background:#e0dbd0;border-radius:99px;overflow:hidden}
+  .fill{height:100%;width:0;background:var(--done);border-radius:99px;transition:width .28s ease}
+  .grand{font-family:Georgia,serif;font-size:16px;font-weight:700;color:var(--terra);white-space:nowrap;
+         font-variant-numeric:tabular-nums}
+  .barfoot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:5px}
+  .saved{font-size:10.5px;color:var(--ink-faint);min-height:13px}
+  .editbtn{background:none;border:1px solid var(--line);border-radius:99px;color:var(--ink-soft);
+    font:inherit;font-size:11.5px;font-weight:700;padding:5px 11px;cursor:pointer;white-space:nowrap}
+  .editbtn.on{background:var(--terra);border-color:var(--terra);color:#fff}
+
+  /* filtros */
+  .chips{display:flex;gap:7px;overflow-x:auto;padding:10px 0 12px;scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex:0 0 auto;border:1px solid var(--line);background:var(--card);color:var(--ink-soft);
+    border-radius:99px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer;min-height:36px}
+  .chip[aria-pressed="true"]{background:var(--ink);color:#f6f3ec;border-color:var(--ink)}
+  .hint{font-size:11.5px;color:var(--ink-faint);margin:-4px 0 12px;line-height:1.5}
+
+  /* seções */
+  .sec{background:var(--card);border:1px solid var(--line);border-radius:10px;margin-bottom:12px;overflow:hidden}
+  .sec.hidden{display:none}
+  .sec-head{display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;
+    padding:14px;min-height:var(--tap);cursor:pointer;text-align:left;font:inherit;color:inherit}
+  .sec-num{font-family:Georgia,serif;font-size:13px;color:var(--terra);font-weight:700;
+    border:1.5px solid var(--terra);border-radius:6px;width:26px;height:26px;flex:0 0 auto;
+    display:flex;align-items:center;justify-content:center}
+  .sec-title{flex:1;font-weight:700;font-size:14.5px}
+  .sec-prog{font-size:12px;color:var(--ink-faint);font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+  .sec-prog b{display:block;font-size:12px;color:var(--terra);font-weight:700}
+  .sec.complete .sec-num{border-color:var(--done);color:var(--done)}
+  .caret{width:10px;height:10px;border-right:2px solid var(--ink-faint);border-bottom:2px solid var(--ink-faint);
+    transform:rotate(45deg);transition:transform .2s;flex:0 0 auto}
+  .sec.closed .caret{transform:rotate(-45deg)}
+  .sec.closed .sec-body{display:none}
+  .sec-body{border-top:1px solid var(--line)}
+  .sec-tools{display:flex;gap:8px;align-items:center;padding:10px 14px;background:#f7f5f0;border-bottom:1px solid #eeeae0}
+  .sec-foot{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px 14px;
+    border-top:1px solid #eeeae0}
+  .subtotal{font-size:12px;color:var(--ink-faint);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .subtotal b{color:var(--ink);font-size:13px}
+
+  /* itens */
+  .item{display:flex;gap:12px;padding:13px 14px;border-bottom:1px solid #eeeae0;
+    min-height:var(--tap);align-items:flex-start}
+  .item.hidden{display:none}
+  .item .hit{display:flex;gap:12px;flex:1;min-width:0;cursor:pointer}
+  .box{flex:0 0 auto;width:24px;height:24px;border:2px solid #b9b2a3;border-radius:6px;margin-top:1px;
+    display:flex;align-items:center;justify-content:center;transition:all .15s}
+  .box svg{width:14px;height:14px;opacity:0;transition:opacity .15s}
+  .item.done .box{background:var(--done);border-color:var(--done)}
+  .item.done .box svg{opacity:1}
+  .item.done .it-title{text-decoration:line-through;color:var(--ink-faint)}
+  .it-body{flex:1;min-width:0}
+  .it-title{font-weight:600;font-size:14px;display:block}
+  .it-desc{font-size:12.5px;color:var(--ink-soft);margin-top:3px;display:block}
+  .it-foot{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:7px}
+  .tag{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:800;text-transform:uppercase;
+    letter-spacing:.5px;color:#fff;border:0;border-radius:4px;padding:5px 7px;font-family:inherit;cursor:pointer}
+  .tag:after{content:"⇄";font-size:10px;opacity:.75;font-weight:400}
+  .tag.orc{background:var(--terra)}.tag.ver{background:var(--sand)}.tag.sug{background:var(--grey)}
+  .price{font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer;border-radius:4px;
+    padding:5px 9px;background:#f2efe9;border:1px solid var(--line);color:var(--ink);
+    font-variant-numeric:tabular-nums;white-space:nowrap}
+  .price.empty{background:none;border-style:dashed;color:var(--ink-faint);font-weight:600}
+  .price-input{font:inherit;font-size:13px;width:120px;padding:6px 8px;border:1px solid var(--terra);
+    border-radius:4px;background:#fff;color:var(--ink)}
+  .info{padding:12px 14px;background:#faf8f4;border-bottom:1px solid #eeeae0;font-size:12.5px;color:var(--ink-soft)}
+  .info b{color:var(--ink)}
+  .kill{background:none;border:0;color:#c6bfb0;font-size:24px;line-height:1;padding:4px 6px;cursor:pointer;
+    flex:0 0 auto;align-self:center}
+  .kill:active{color:var(--danger)}
+
+  /* anotações */
+  .notes{padding:12px 14px;background:#faf8f4}
+  .notes label{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.8px;
+    color:var(--ink-faint);font-weight:700;margin-bottom:5px}
+  textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:10px;font:inherit;
+    font-size:13.5px;background:var(--card);color:var(--ink);resize:vertical;min-height:62px}
+  textarea:focus,input:focus,select:focus{outline:2px solid var(--terra);outline-offset:1px}
+
+  /* formulários */
+  .form{padding:12px 14px;background:#f7f5f0;border-top:1px solid #eeeae0;display:flex;flex-direction:column;gap:8px}
+  .form.closed{display:none}
+  .form .duo{display:flex;gap:8px}
+  input[type=text],select{width:100%;border:1px solid var(--line);border-radius:8px;padding:11px;font:inherit;
+    font-size:13.5px;background:var(--card);color:var(--ink);min-height:var(--tap);appearance:none}
+  select{background-image:linear-gradient(45deg,transparent 50%,var(--ink-faint) 50%),
+    linear-gradient(135deg,var(--ink-faint) 50%,transparent 50%);
+    background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;
+    background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:36px}
+
+  /* peças */
+  .parts{background:var(--card);border:1px solid var(--line);border-radius:10px;margin-bottom:12px;overflow:hidden}
+  .parts .sec-head{cursor:default}
+  .part{display:flex;align-items:center;gap:11px;padding:12px 14px;border-bottom:1px solid #eeeae0}
+  .part .box{width:22px;height:22px;cursor:pointer;margin:0}
+  .part.got .box{background:var(--done);border-color:var(--done)}
+  .part.got .box svg{opacity:1}
+  .part .pinfo{flex:1;min-width:0}
+  .part .pname{font-weight:600;font-size:13.5px;word-break:break-word}
+  .part.got .pname{text-decoration:line-through;color:var(--ink-faint)}
+  .part .pmeta{font-size:11.5px;color:var(--ink-faint);margin-top:3px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .empty{padding:16px 14px;font-size:12.5px;color:var(--ink-faint);text-align:center}
+
+  /* resumo financeiro */
+  .money{background:var(--card);border:1px solid var(--line);border-radius:10px;margin-bottom:12px;overflow:hidden}
+  .money h3{margin:0;padding:13px 14px;font-size:13px;text-transform:uppercase;letter-spacing:.9px;
+    color:var(--ink-soft);border-bottom:1px solid var(--line);font-family:inherit}
+  .mrow{display:flex;justify-content:space-between;gap:12px;padding:10px 14px;font-size:13.5px;
+    border-bottom:1px solid #f0ece3;font-variant-numeric:tabular-nums}
+  .mrow span:last-child{font-weight:700;white-space:nowrap}
+  .mrow.big{background:#faf8f4;font-family:Georgia,serif;font-size:16px;border-bottom:0}
+  .mrow.big span:last-child{color:var(--terra);font-size:19px}
+  .mrow.muted{color:var(--ink-faint);font-size:12.5px}
+
+  /* botões */
+  .btn{border:0;border-radius:9px;padding:13px 16px;font:inherit;font-size:14px;font-weight:700;
+    cursor:pointer;min-height:var(--tap);width:100%}
+  .btn.dark{background:var(--ink);color:#f6f3ec}
+  .btn.ghost{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+  .btn.sm{font-size:12.5px;padding:9px 12px;min-height:38px;width:auto}
+  .btn.link{background:none;color:var(--ink-faint);font-weight:600;font-size:12.5px;text-decoration:underline;padding:10px}
+  .add-sec{background:var(--card);border:1px dashed #c9c2b3;border-radius:10px;margin-bottom:12px;overflow:hidden}
+  .add-sec>button{width:100%;background:none;border:0;padding:15px;font:inherit;font-size:13.5px;
+    font-weight:700;color:var(--terra);cursor:pointer;min-height:var(--tap)}
+  .dock{position:fixed;left:0;right:0;bottom:0;z-index:40;background:rgba(242,239,233,.96);
+    backdrop-filter:blur(8px);border-top:1px solid var(--line);
+    padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
+  .dock .wrap{padding:0;display:flex;gap:9px}
+  .dock .btn{flex:1}
+  footer{padding:18px 4px 8px;font-size:11px;color:var(--ink-faint);text-align:center;line-height:1.5}
+  .toast{position:fixed;left:50%;bottom:104px;transform:translate(-50%,14px);background:var(--ink);
+    color:#f6f3ec;padding:11px 18px;border-radius:99px;font-size:13px;font-weight:600;z-index:60;
+    opacity:0;pointer-events:none;transition:all .25s;max-width:88%;text-align:center}
+  .toast.on{opacity:1;transform:translate(-50%,0)}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Ordem de serviço &middot; uso da oficina</p>
+    <h1>Revisão geral</h1>
+    <p class="car">Toyota Corolla XEi 2000 &middot; 1.8 7A-FE &middot; automático &middot; ~260.000 km</p>
+    <div class="meta">
+      <span><b>Proprietário:</b> Luis</span>
+      <span><b>Telefone:</b> (14) 99624-2405</span>
+      <span><b>Cidade:</b> Ourinhos, SP</span>
+    </div>
+  </div>
+</div>
+
+<div class="bar">
+  <div class="wrap">
+    <div class="row">
+      <span class="count" id="count">0<small>/0</small></span>
+      <span class="track"><span class="fill" id="fill"></span></span>
+      <span class="grand" id="grand">R$ 0,00</span>
+    </div>
+    <div class="barfoot">
+      <span class="saved" id="saved"></span>
+      <button class="editbtn" id="editToggle" type="button">Editar lista</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="chips" id="chips">
+    <button class="chip" data-filter="todos" aria-pressed="true">Tudo</button>
+    <button class="chip" data-filter="pendente" aria-pressed="false">Pendentes</button>
+    <button class="chip" data-filter="feito" aria-pressed="false">Concluídos</button>
+    <button class="chip" data-filter="orc" aria-pressed="false">Orçado</button>
+    <button class="chip" data-filter="ver" aria-pressed="false">A verificar</button>
+    <button class="chip" data-filter="sug" aria-pressed="false">Sugestão</button>
+  </div>
+
+  <p class="hint">Toque na linha para marcar como feito. Toque no selo colorido para trocar o status, e no valor
+  para digitar quanto custa. Os valores somam sozinhos no topo.</p>
+
+  <div id="list"></div>
+
+  <div class="add-sec">
+    <button type="button" id="newSecBtn">+ Nova seção</button>
+    <div class="form closed" id="newSecForm">
+      <input type="text" id="secName" placeholder="Nome da seção (ex.: Elétrica, Ar-condicionado)" autocomplete="off">
+      <div class="duo">
+        <button class="btn ghost sm" type="button" id="secCancel" style="flex:1">Cancelar</button>
+        <button class="btn dark sm" type="button" id="secSave" style="flex:1">Criar seção</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="parts">
+    <div class="sec-head">
+      <span class="sec-num">P</span>
+      <span class="sec-title">Peças a pedir</span>
+      <span class="sec-prog" id="partsProg">0/0</span>
+    </div>
+    <div id="partList"></div>
+    <div class="form">
+      <input type="text" id="pName" placeholder="Peça (ex.: amortecedor traseiro)" autocomplete="off">
+      <div class="duo">
+        <input type="text" id="pCode" placeholder="Código / nº" autocomplete="off">
+        <input type="text" id="pPrice" placeholder="Valor R$" inputmode="decimal" autocomplete="off">
+      </div>
+      <button class="btn ghost" id="addPart" type="button">Adicionar peça</button>
+    </div>
+  </div>
+
+  <div class="money">
+    <h3>Resumo do orçamento</h3>
+    <div class="mrow"><span>Serviços e itens da lista</span><span id="mServ">R$ 0,00</span></div>
+    <div class="mrow"><span>Peças a pedir</span><span id="mParts">R$ 0,00</span></div>
+    <div class="mrow muted"><span>Itens já concluídos</span><span id="mDone">R$ 0,00</span></div>
+    <div class="mrow muted"><span>Ainda pendente</span><span id="mOpen">R$ 0,00</span></div>
+    <div class="mrow big"><span>Total</span><span id="mTotal">R$ 0,00</span></div>
+  </div>
+
+  <button class="btn link" id="reset">Restaurar lista original e limpar tudo</button>
+
+  <footer>
+    Referência inicial da oficina: <b>R$ 3.650,00</b> (peças + mão de obra), sem alinhamento e balanceamento.<br>
+    Lista elaborada com a ajuda de uma inteligência artificial, a partir de relato do proprietário,
+    do retorno da oficina e de pesquisa técnica complementar.
+  </footer>
+</div>
+
+<div class="dock">
+  <div class="wrap">
+    <button class="btn ghost" id="copy" type="button">Copiar resumo</button>
+    <button class="btn dark" id="wa" type="button">Enviar ao Luis</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var KEY = "corolla_checklist_v2";
+  var OLD_KEY = "corolla_checklist_v1";
+  var PHONE = "5514996242405";
+  var ORDER = ["orc","ver","sug"];
+  var TAGS = {orc:"Orçado", ver:"A verificar", sug:"Sugestão"};
+  var CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+
+  var SEED = [
+    { id:"s1", title:"Suspensão e direção", items:[
+      {id:"s1a", t:"Amortecedores traseiros (par)", d:"Confirmado ruim. Traseira balança muito em piso esburacado.", g:"orc"},
+      {id:"s1b", t:"Kit coifa e batente traseiro", d:"Troca junto com os amortecedores.", g:"orc"},
+      {id:"s1c", t:"Suspensão dianteira completa", d:"Amortecedores, molas, coifas e batentes.", g:"ver"},
+      {id:"s1d", t:"Buchas, pivôs e terminais de direção", d:"Carro escapa e puxa para os lados em estrada ruim.", g:"ver"},
+      {id:"s1e", t:"Alinhamento e balanceamento", d:"Fora do orçamento atual. Fazer depois da suspensão.", g:"ver"}
+    ]},
+    { id:"s2", title:"Rodas, cubos e rolamentos", items:[
+      {id:"s2a", t:"Cubo de roda traseiro esquerdo", d:"Identificado ruim pela oficina.", g:"orc"},
+      {id:"s2b", t:"Cilindro de roda traseiro esquerdo", d:"Item citado no retorno da oficina. Confirmar descrição exata da peça.", g:"orc"},
+      {id:"s2c", t:"Rolamentos das rodas dianteiras", d:"Ronco alto acima de 80 km/h que aumenta com a velocidade. Verificar os 4 cantos.", g:"ver"},
+      {id:"s2d", t:"Teste em curva para confirmar o lado", d:"Se o ruído aumenta ao virar para a direita, o problema tende a estar no lado esquerdo (e vice-versa).", g:"ver"}
+    ]},
+    { id:"s3", title:"Freios", items:[
+      {id:"s3a", t:"Óleo de freio (fluido)", d:"Troca completa.", g:"orc"},
+      {id:"s3b", t:"Freio traseiro a tambor", d:"Faz barulho de ferro com ferro. Verificar lonas, tambor, cilindros e sistema de ajuste.", g:"ver"},
+      {id:"s3c", t:"Freio dianteiro a disco", d:"Pastilhas e kit de presilhas trocados há menos de 1 ano. Conferir mesmo assim.", g:"ver"},
+      {id:"s3d", t:"Discos dianteiros", d:"Conferir desgaste e empenamento. Trocar se necessário.", g:"ver"},
+      {id:"s3e", t:"Pinças de freio", d:"Verificar travamento e vazamento.", g:"ver"}
+    ]},
+    { id:"s4", title:"Motor — manutenção periódica", items:[
+      {id:"s4a", t:"Óleo do motor", d:"Já rodou ~5.000 km desde a última troca. Preferência do proprietário: trocar a cada 5.000 km.", g:"orc"},
+      {id:"s4b", t:"Filtro de óleo", d:"", g:"orc"},
+      {id:"s4c", t:"Filtro de combustível", d:"", g:"orc"},
+      {id:"s4d", t:"Filtro de ar do motor", d:"", g:"orc"},
+      {id:"s4e", t:"Filtro de ar-condicionado (cabine)", d:"", g:"orc"},
+      {id:"s4f", t:"Jogo de velas de ignição", d:"", g:"orc"},
+      {id:"s4g", t:"Jogo de junta da tampa de válvulas", d:"Está vazando óleo. Inclui material de limpeza e cola.", g:"orc"},
+      {id:"s4h", t:"Cabos de vela", d:"Verificar estado e trocar se necessário.", g:"ver"},
+      {id:"s4i", t:"Correia dentada e tensor", d:"Item crítico nessa quilometragem. Verificar data/km da última troca.", g:"sug"},
+      {id:"s4j", t:"Mangueiras e coxins do motor", d:"Verificar rachaduras e folgas.", g:"sug"}
+    ]},
+    { id:"s5", title:"Correia do alternador",
+      info:"<b>Sintoma:</b> rangido agudo ao dar partida, em cerca de 2 a 3 de cada 10 partidas. Dura pouco — começa e cessa logo, diferente do ruído contínuo de correia já comprometida. O proprietário pede atenção especial a este ponto.",
+      items:[{id:"s5a", t:"Correia do alternador e tensor", d:"Verificar tensão, desgaste e alinhamento. Trocar se necessário.", g:"ver"}]},
+    { id:"s6", title:"Sistema de arrefecimento",
+      info:"O carro <b>nunca superaqueceu</b>, nem em viagens de estrada.",
+      items:[
+      {id:"s6a", t:"Varetagem / limpeza interna do sistema", d:"Líquido com aspecto e cor de barro — ferrugem por uso prolongado de água comum.", g:"ver"},
+      {id:"s6b", t:"Reabastecer com água desmineralizada + aditivo", d:"Para evitar que a corrosão volte a ocorrer.", g:"ver"},
+      {id:"s6c", t:"Válvula termostática", d:"Em dias frios o ponteiro cai abaixo do normal em rodovia. Avaliar com o sistema aberto.", g:"ver"}
+    ]},
+    { id:"s7", title:'Motor — ruído "grilado" a quente',
+      info:'<b>Sintoma:</b> ruído tipo grilo ("toc-toc-toc") que só aparece com o motor na temperatura de trabalho, entre 1.500 e 2.500 RPM (pico em ~2.000 RPM), sob carga. A frio não ocorre. Sem perda perceptível de potência.<br><br><b>Já tentado sem sucesso:</b> álcool no tanque, kit descarbonizante (6 aplicações), gasolina aditivada e descarbonizante no corpo de borboleta.<br><br><b>Diagnóstico eletrônico:</b> carro anterior ao OBD-II. Não há tomada sob o painel — o conector DLC1 fica no compartimento do motor, perto da torre de suspensão. Scanner moderno exige cabo adaptador OBD-I → OBD-II Toyota.',
+      items:[
+      {id:"s7a", t:"Sensor de detonação (knock sensor)", d:"Suspeita principal. Atrás do bloco, sob o coletor de admissão.", g:"ver"},
+      {id:"s7b", t:"Sensor MAF (fluxo de ar)", d:"Se sujo ou descalibrado, gera mistura pobre e detonação.", g:"ver"},
+      {id:"s7c", t:"Distribuidor: ponto e vazamento de óleo", d:"Falha documentada no 7A-FE. Óleo mais fluido a quente infiltra e contamina rotor e tampa.", g:"ver"},
+      {id:"s7d", t:"Teste de compressão nos cilindros", d:"Para descartar perda de vedação ou junta de cabeçote.", g:"ver"}
+    ]}
+  ];
+
+  var state, filter = "todos", editing = false, storageOk = true;
+
+  function clone(o){ return JSON.parse(JSON.stringify(o)); }
+  function uid(){ return "x" + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+  function fresh(){ return {sections: clone(SEED), checks:{}, notes:{}, parts:[], closed:{}, updated:null}; }
+
+  /* ---------- dinheiro ---------- */
+  function parseMoney(str){
+    if(str == null) return null;
+    var s = String(str).replace(/[^\d,.-]/g, "");
+    if(!s) return null;
+    if(s.indexOf(",") > -1){ s = s.replace(/\./g, "").replace(",", "."); }
+    else{
+      var parts = s.split(".");
+      if(parts.length > 2 || (parts.length === 2 && parts[1].length === 3)) s = parts.join("");
+    }
+    var n = parseFloat(s);
+    return isNaN(n) ? null : Math.round(n * 100) / 100;
+  }
+  function fmt(n){
+    return "R$ " + (Number(n)||0).toFixed(2).replace(".", ",").replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  }
+
+  function load(){
+    state = fresh();
+    try{
+      var raw = localStorage.getItem(KEY);
+      if(!raw){
+        var old = localStorage.getItem(OLD_KEY);
+        if(old){
+          var o = JSON.parse(old);
+          state.checks = o.checks || {}; state.notes = o.notes || {};
+          state.closed = o.closed || {};
+          if(Array.isArray(o.parts)) state.parts = o.parts;
+        }
+      } else {
+        var p = JSON.parse(raw);
+        if(Array.isArray(p.sections) && p.sections.length) state.sections = p.sections;
+        state.checks = p.checks || {};
+        state.notes  = p.notes  || {};
+        state.parts  = Array.isArray(p.parts) ? p.parts : [];
+        state.closed = p.closed || {};
+        state.updated= p.updated|| null;
+      }
+      /* migração: valores em texto viram número */
+      state.parts.forEach(function(pt){
+        if(typeof pt.v !== "number" && pt.price){
+          var n = parseMoney(pt.price);
+          if(n !== null){ pt.v = n; delete pt.price; }
+        }
+      });
+    }catch(e){ storageOk = false; }
+  }
+
+  function save(){
+    state.updated = new Date().toISOString();
+    try{ localStorage.setItem(KEY, JSON.stringify(state)); }
+    catch(e){ storageOk = false; }
+    stamp();
+  }
+
+  function pad(n){ return n < 10 ? "0"+n : ""+n; }
+  function stamp(){
+    var el = document.getElementById("saved");
+    if(!storageOk){ el.textContent = "Sem salvamento neste navegador — envie o resumo antes de fechar."; return; }
+    if(!state.updated){ el.textContent = "As marcações ficam salvas neste aparelho."; return; }
+    var d = new Date(state.updated);
+    el.textContent = "Salvo às " + pad(d.getHours()) + ":" + pad(d.getMinutes()) +
+                     " de " + pad(d.getDate()) + "/" + pad(d.getMonth()+1);
+  }
+
+  function total(){ var t=0; state.sections.forEach(function(s){ t += s.items.length; }); return t; }
+  function doneCount(){ var c=0; state.sections.forEach(function(s){ s.items.forEach(function(i){ if(state.checks[i.id]) c++; }); }); return c; }
+  function secSum(sec){ var v=0; sec.items.forEach(function(i){ v += Number(i.v)||0; }); return v; }
+  function servSum(){ var v=0; state.sections.forEach(function(s){ v += secSum(s); }); return v; }
+  function partsSum(){ var v=0; state.parts.forEach(function(p){ v += Number(p.v)||0; }); return v; }
+  function doneSum(){
+    var v=0;
+    state.sections.forEach(function(s){ s.items.forEach(function(i){ if(state.checks[i.id]) v += Number(i.v)||0; }); });
+    state.parts.forEach(function(p){ if(p.got) v += Number(p.v)||0; });
+    return v;
+  }
+  function esc(s){
+    return String(s==null?"":s).replace(/[&<>"]/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];
+    });
+  }
+
+  /* editor de valor: troca o botão por um campo */
+  function editPrice(btn, get, set){
+    var input = document.createElement("input");
+    input.type = "text"; input.inputMode = "decimal"; input.className = "price-input";
+    input.value = get() ? String(get()).replace(".", ",") : "";
+    input.placeholder = "0,00";
+    btn.replaceWith(input);
+    input.focus(); input.select();
+    var closed = false;
+    function commit(){
+      if(closed) return; closed = true;
+      set(parseMoney(input.value));
+      save(); render();
+    }
+    input.addEventListener("blur", commit);
+    input.addEventListener("keydown", function(e){
+      if(e.key === "Enter"){ e.preventDefault(); input.blur(); }
+      if(e.key === "Escape"){ closed = true; render(); }
+    });
+  }
+
+  /* ---------- render ---------- */
+  function render(){
+    var list = document.getElementById("list");
+    list.innerHTML = "";
+
+    state.sections.forEach(function(sec, idx){
+      var el = document.createElement("div");
+      el.className = "sec" + (state.closed[sec.id] ? " closed" : "");
+      el.dataset.sec = sec.id;
+
+      var h = '<button class="sec-head" type="button">' +
+        '<span class="sec-num">'+(idx+1)+'</span>' +
+        '<span class="sec-title">'+esc(sec.title)+'</span>' +
+        '<span class="sec-prog"></span><span class="caret"></span></button>' +
+        '<div class="sec-body">';
+
+      if(editing){
+        h += '<div class="sec-tools">' +
+             '<button class="btn ghost sm" type="button" data-act="rename" style="flex:1">Renomear seção</button>' +
+             '<button class="btn ghost sm" type="button" data-act="delsec" style="flex:1;color:var(--danger)">Excluir seção</button>' +
+             '</div>';
+      }
+      if(sec.info) h += '<div class="info">'+sec.info+'</div>';
+
+      sec.items.forEach(function(it){
+        var has = typeof it.v === "number" && it.v > 0;
+        h += '<div class="item" data-id="'+it.id+'">' +
+               '<span class="hit"><span class="box">'+CHECK+'</span>' +
+               '<span class="it-body"><span class="it-title">'+esc(it.t)+'</span>' +
+               (it.d ? '<span class="it-desc">'+esc(it.d)+'</span>' : '') +
+               '<span class="it-foot">' +
+                 '<button class="tag '+it.g+'" type="button" data-role="tag">'+TAGS[it.g]+'</button>' +
+                 '<button class="price'+(has?"":" empty")+'" type="button" data-role="price">' +
+                   (has ? fmt(it.v) : "+ valor") + '</button>' +
+               '</span></span></span>' +
+               (editing ? '<button class="kill" type="button" data-role="delitem" aria-label="Excluir item">&times;</button>' : '') +
+             '</div>';
+      });
+
+      h += '<div class="form closed" data-role="itemform">' +
+             '<input type="text" data-f="t" placeholder="Item (ex.: trocar bateria)" autocomplete="off">' +
+             '<input type="text" data-f="d" placeholder="Detalhe (opcional)" autocomplete="off">' +
+             '<div class="duo">' +
+               '<select data-f="g">' +
+                 '<option value="ver">A verificar</option>' +
+                 '<option value="orc">Orçado</option>' +
+                 '<option value="sug">Sugestão</option>' +
+               '</select>' +
+               '<input type="text" data-f="v" placeholder="Valor R$" inputmode="decimal" autocomplete="off">' +
+             '</div>' +
+             '<div class="duo">' +
+               '<button class="btn ghost sm" type="button" data-act="itemcancel" style="flex:1">Cancelar</button>' +
+               '<button class="btn dark sm" type="button" data-act="itemsave" style="flex:1">Adicionar</button>' +
+             '</div>' +
+           '</div>' +
+           '<div class="sec-foot">' +
+             '<button class="btn ghost sm" type="button" data-act="additem">+ Adicionar item</button>' +
+             '<span class="subtotal">Subtotal <b>'+fmt(secSum(sec))+'</b></span>' +
+           '</div>' +
+           '<div class="notes"><label for="n-'+sec.id+'">Anotações da oficina</label>' +
+           '<textarea id="n-'+sec.id+'" placeholder="O que foi encontrado, peça usada, valor…"></textarea></div>' +
+           '</div>';
+
+      el.innerHTML = h;
+      list.appendChild(el);
+      wireSection(el, sec);
+    });
+
+    refresh();
+  }
+
+  function wireSection(el, sec){
+    el.querySelector(".sec-head").addEventListener("click", function(){
+      el.classList.toggle("closed");
+      state.closed[sec.id] = el.classList.contains("closed");
+      save();
+    });
+
+    var ta = el.querySelector("textarea");
+    ta.value = state.notes[sec.id] || "";
+    ta.addEventListener("input", function(){ state.notes[sec.id] = ta.value; debounce(save); });
+
+    var form = el.querySelector('[data-role="itemform"]');
+
+    el.querySelectorAll("[data-act]").forEach(function(b){
+      b.addEventListener("click", function(){
+        var act = b.dataset.act;
+        if(act === "additem"){ form.classList.remove("closed"); form.querySelector('[data-f="t"]').focus(); }
+        if(act === "itemcancel"){ form.classList.add("closed"); clearForm(form); }
+        if(act === "itemsave"){
+          var t = form.querySelector('[data-f="t"]').value.trim();
+          if(!t){ form.querySelector('[data-f="t"]').focus(); toast("Escreva o nome do item"); return; }
+          var v = parseMoney(form.querySelector('[data-f="v"]').value);
+          var novo = {id: uid(), t:t, d: form.querySelector('[data-f="d"]').value.trim(), g: form.querySelector('[data-f="g"]').value};
+          if(v !== null) novo.v = v;
+          sec.items.push(novo);
+          save(); render(); toast("Item adicionado");
+        }
+        if(act === "rename"){
+          var nome = prompt("Nome da seção:", sec.title);
+          if(nome && nome.trim()){ sec.title = nome.trim(); save(); render(); }
+        }
+        if(act === "delsec"){
+          if(!confirm('Excluir a seção "'+sec.title+'" e todos os seus itens?')) return;
+          state.sections = state.sections.filter(function(s){ return s.id !== sec.id; });
+          save(); render(); toast("Seção excluída");
+        }
+      });
+    });
+
+    el.querySelectorAll(".item").forEach(function(row){
+      var id = row.dataset.id;
+      function item(){ return sec.items.filter(function(x){ return x.id === id; })[0]; }
+
+      row.querySelector(".hit").addEventListener("click", function(e){
+        if(e.target.closest('[data-role="tag"]') || e.target.closest('[data-role="price"]')) return;
+        state.checks[id] = !state.checks[id];
+        row.classList.toggle("done", !!state.checks[id]);
+        save(); refresh();
+      });
+
+      row.querySelector('[data-role="tag"]').addEventListener("click", function(e){
+        e.stopPropagation();
+        var it = item(); if(!it) return;
+        it.g = ORDER[(ORDER.indexOf(it.g) + 1) % ORDER.length];
+        save(); render(); toast("Status: " + TAGS[it.g]);
+      });
+
+      row.querySelector('[data-role="price"]').addEventListener("click", function(e){
+        e.stopPropagation();
+        var btn = this;
+        editPrice(btn,
+          function(){ var it = item(); return it && typeof it.v === "number" ? it.v : ""; },
+          function(v){ var it = item(); if(!it) return; if(v === null) delete it.v; else it.v = v; });
+      });
+
+      var kill = row.querySelector('[data-role="delitem"]');
+      if(kill) kill.addEventListener("click", function(){
+        var it = item();
+        if(!confirm('Excluir "'+(it?it.t:"item")+'"?')) return;
+        sec.items = sec.items.filter(function(x){ return x.id !== id; });
+        delete state.checks[id];
+        save(); render(); toast("Item excluído");
+      });
+    });
+  }
+
+  var timer = null;
+  function debounce(fn){ clearTimeout(timer); timer = setTimeout(fn, 500); }
+  function clearForm(f){
+    f.querySelectorAll("input").forEach(function(i){ i.value = ""; });
+    f.querySelector("select").value = "ver";
+  }
+
+  function refresh(){
+    state.sections.forEach(function(sec){
+      var el = document.querySelector('.sec[data-sec="'+sec.id+'"]');
+      if(!el) return;
+      var d = 0, vis = 0;
+      sec.items.forEach(function(it){
+        var row = el.querySelector('.item[data-id="'+it.id+'"]');
+        if(!row) return;
+        var on = !!state.checks[it.id];
+        if(on) d++;
+        row.classList.toggle("done", on);
+        var show = filter === "todos" ||
+                   (filter === "pendente" && !on) ||
+                   (filter === "feito" && on) ||
+                   (filter === it.g);
+        row.classList.toggle("hidden", !show);
+        if(show) vis++;
+      });
+      var sum = secSum(sec);
+      el.querySelector(".sec-prog").innerHTML = d + "/" + sec.items.length +
+        (sum > 0 ? "<b>" + fmt(sum) + "</b>" : "");
+      el.classList.toggle("complete", sec.items.length > 0 && d === sec.items.length);
+      el.classList.toggle("hidden", sec.items.length > 0 && vis === 0 && !editing);
+    });
+
+    var t = total(), d = doneCount();
+    document.getElementById("count").innerHTML = d + '<small>/' + t + '</small>';
+    document.getElementById("fill").style.width = (t ? (d/t*100) : 0) + "%";
+
+    var serv = servSum(), pcs = partsSum(), tot = serv + pcs, feito = doneSum();
+    document.getElementById("grand").textContent  = fmt(tot);
+    document.getElementById("mServ").textContent  = fmt(serv);
+    document.getElementById("mParts").textContent = fmt(pcs);
+    document.getElementById("mDone").textContent  = fmt(feito);
+    document.getElementById("mOpen").textContent  = fmt(tot - feito);
+    document.getElementById("mTotal").textContent = fmt(tot);
+
+    renderParts();
+  }
+
+  /* ---------- peças ---------- */
+  function renderParts(){
+    var box = document.getElementById("partList");
+    box.innerHTML = "";
+    if(!state.parts.length){
+      box.innerHTML = '<div class="empty">Nenhuma peça na lista. Adicione abaixo as que precisam ser encomendadas.</div>';
+    }
+    state.parts.forEach(function(p, i){
+      var row = document.createElement("div");
+      row.className = "part" + (p.got ? " got" : "");
+      var has = typeof p.v === "number" && p.v > 0;
+      row.innerHTML = '<span class="box">'+CHECK+'</span>' +
+        '<span class="pinfo"><span class="pname">'+esc(p.name)+'</span>' +
+        '<span class="pmeta">' + (p.code ? esc(p.code) : "") +
+        '<button class="price'+(has?"":" empty")+'" type="button" data-role="pprice">' +
+        (has ? fmt(p.v) : "+ valor") + '</button></span></span>' +
+        '<button class="kill" type="button" aria-label="Remover peça">&times;</button>';
+
+      row.querySelector(".box").addEventListener("click", function(){
+        state.parts[i].got = !state.parts[i].got; save(); refresh();
+      });
+      row.querySelector('[data-role="pprice"]').addEventListener("click", function(){
+        editPrice(this,
+          function(){ return typeof state.parts[i].v === "number" ? state.parts[i].v : ""; },
+          function(v){ if(v === null) delete state.parts[i].v; else state.parts[i].v = v; });
+      });
+      row.querySelector(".kill").addEventListener("click", function(){
+        state.parts.splice(i,1); save(); refresh();
+      });
+      box.appendChild(row);
+    });
+    var got = state.parts.filter(function(p){ return p.got; }).length;
+    document.getElementById("partsProg").innerHTML = got + "/" + state.parts.length +
+      (partsSum() > 0 ? "<b>" + fmt(partsSum()) + "</b>" : "");
+  }
+
+  document.getElementById("addPart").addEventListener("click", function(){
+    var n = document.getElementById("pName");
+    if(!n.value.trim()){ n.focus(); toast("Escreva o nome da peça"); return; }
+    var v = parseMoney(document.getElementById("pPrice").value);
+    var nova = {name: n.value.trim(), code: document.getElementById("pCode").value.trim(), got:false};
+    if(v !== null) nova.v = v;
+    state.parts.push(nova);
+    n.value = ""; document.getElementById("pCode").value = ""; document.getElementById("pPrice").value = "";
+    save(); refresh(); toast("Peça adicionada");
+  });
+
+  /* ---------- nova seção ---------- */
+  var secForm = document.getElementById("newSecForm");
+  document.getElementById("newSecBtn").addEventListener("click", function(){
+    secForm.classList.toggle("closed");
+    if(!secForm.classList.contains("closed")) document.getElementById("secName").focus();
+  });
+  document.getElementById("secCancel").addEventListener("click", function(){
+    secForm.classList.add("closed"); document.getElementById("secName").value = "";
+  });
+  document.getElementById("secSave").addEventListener("click", function(){
+    var i = document.getElementById("secName");
+    if(!i.value.trim()){ i.focus(); toast("Escreva o nome da seção"); return; }
+    state.sections.push({id: uid(), title: i.value.trim(), items: []});
+    i.value = ""; secForm.classList.add("closed");
+    save(); render(); toast("Seção criada");
+  });
+
+  /* ---------- edição ---------- */
+  document.getElementById("editToggle").addEventListener("click", function(){
+    editing = !editing;
+    this.classList.toggle("on", editing);
+    this.textContent = editing ? "Concluir edição" : "Editar lista";
+    render();
+  });
+
+  /* ---------- filtros ---------- */
+  document.getElementById("chips").addEventListener("click", function(e){
+    var b = e.target.closest(".chip");
+    if(!b) return;
+    filter = b.dataset.filter;
+    document.querySelectorAll(".chip").forEach(function(c){ c.setAttribute("aria-pressed", String(c === b)); });
+    refresh();
+  });
+
+  /* ---------- resumo ---------- */
+  function summary(){
+    var d = new Date();
+    var out = "CHECKLIST — COROLLA XEi 2000 (Luis)\n" +
+      pad(d.getDate())+"/"+pad(d.getMonth()+1)+"/"+d.getFullYear()+" às "+pad(d.getHours())+":"+pad(d.getMinutes()) +
+      "\nProgresso: " + doneCount() + " de " + total() + " itens\n";
+    state.sections.forEach(function(sec){
+      var feitos = sec.items.filter(function(i){ return state.checks[i.id]; });
+      var falta  = sec.items.filter(function(i){ return !state.checks[i.id]; });
+      var sum = secSum(sec);
+      out += "\n— " + sec.title.toUpperCase() + " (" + feitos.length + "/" + sec.items.length + ")" +
+             (sum > 0 ? " — " + fmt(sum) : "") + "\n";
+      feitos.forEach(function(i){ out += "  [x] " + i.t + (i.v ? " — " + fmt(i.v) : "") + "\n"; });
+      falta.forEach(function(i){  out += "  [ ] " + i.t + " (" + TAGS[i.g] + ")" + (i.v ? " — " + fmt(i.v) : "") + "\n"; });
+      if(state.notes[sec.id] && state.notes[sec.id].trim()) out += "  Obs: " + state.notes[sec.id].trim() + "\n";
+    });
+    if(state.parts.length){
+      out += "\n— PEÇAS (" + fmt(partsSum()) + ")\n";
+      state.parts.forEach(function(p){
+        out += "  [" + (p.got ? "x" : " ") + "] " + p.name + (p.code ? " · " + p.code : "") +
+               (p.v ? " — " + fmt(p.v) : "") + "\n";
+      });
+    }
+    var serv = servSum(), pcs = partsSum();
+    out += "\n— ORÇAMENTO\n" +
+           "  Serviços e itens: " + fmt(serv) + "\n" +
+           "  Peças: " + fmt(pcs) + "\n" +
+           "  Já concluído: " + fmt(doneSum()) + "\n" +
+           "  TOTAL: " + fmt(serv + pcs) + "\n";
+    return out;
+  }
+
+  document.getElementById("copy").addEventListener("click", function(){
+    var txt = summary();
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(function(){ toast("Resumo copiado"); }, function(){ fallbackCopy(txt); });
+    } else { fallbackCopy(txt); }
+  });
+  function fallbackCopy(txt){
+    var ta = document.createElement("textarea");
+    ta.value = txt; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy"); toast("Resumo copiado"); }
+    catch(e){ toast("Não foi possível copiar"); }
+    document.body.removeChild(ta);
+  }
+  document.getElementById("wa").addEventListener("click", function(){
+    window.open("https://wa.me/" + PHONE + "?text=" + encodeURIComponent(summary()), "_blank");
+  });
+
+  document.getElementById("reset").addEventListener("click", function(){
+    if(!confirm("Restaurar a lista original? Itens, seções, valores, marcações, anotações e peças serão perdidos.")) return;
+    state = fresh();
+    try{ localStorage.removeItem(KEY); localStorage.removeItem(OLD_KEY); }catch(e){}
+    editing = false;
+    var b = document.getElementById("editToggle");
+    b.classList.remove("on"); b.textContent = "Editar lista";
+    render(); stamp(); toast("Lista restaurada");
+  });
+
+  var tTimer = null;
+  function toast(msg){
+    var el = document.getElementById("toast");
+    el.textContent = msg; el.classList.add("on");
+    clearTimeout(tTimer); tTimer = setTimeout(function(){ el.classList.remove("on"); }, 1900);
+  }
+
+  load(); render(); stamp();
+})();
+</script>
+</body>
+</html>
